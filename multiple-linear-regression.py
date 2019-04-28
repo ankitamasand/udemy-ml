@@ -10,7 +10,7 @@ dataset = pd.read_csv('50_Startups.csv')
 X = dataset.iloc[:, :-1].values
 y = dataset.iloc[:, 4].values
 
-# Encoding the categorical data (Dependent Variable: State)
+# Encoding the categorical data (Independent Variable: State)
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 labelencoder_X = LabelEncoder()
 X[:, 3] = labelencoder_X.fit_transform(X[:, 3])
@@ -32,11 +32,29 @@ regressor.fit(X_train, y_train)
 # Predicting the Test set results
 y_pred = regressor.predict(X_test)
 
-# Building the optimal model using Backward Elimination (Significance Level is 0.05)
+# Building the optimal model using Backward Elimination (Significance Level is 0.05) [Manually Checking & then updating]
 import statsmodels.formula.api as sm
 X = np.append(arr = np.ones((50, 1)).astype(int), values = X, axis = 1)
 
+# Backward Elimination using p values
+def backward_elimination (X, sl):
+    num_vars = len(X[0])
+    for i in range(0, num_vars):
+        regressor_OLS = sm.OLS(y, X).fit()
+        max_var = max(regressor_OLS.pvalues).astype(float)
+        if max_var > sl:
+            for j in range(0, num_vars - i):
+                if (regressor_OLS.pvalues[j].astype(float) == max_var):
+                    X = np.delete(X, j, 1)
+    regressor_OLS.summary()
+    return X
+
+SL = 0.05
 X_opt = X[:, [0, 1, 2, 3, 4, 5]]
+X_modeled = backward_elimination(X, SL)
+
+# Visualizing Backward Elimination in the following steps
+"""X_opt = X[:, [0, 1, 2, 3, 4, 5]]
 regressor_OLS = sm.OLS(endog = y, exog = X_opt).fit()
 regressor_OLS.summary()
 
@@ -54,9 +72,4 @@ regressor_OLS.summary()
 
 X_opt = X[:, [0, 3]]
 regressor_OLS = sm.OLS(endog = y, exog = X_opt).fit()
-regressor_OLS.summary()
-
-
-
-
-
+regressor_OLS.summary()"""
